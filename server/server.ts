@@ -9,29 +9,39 @@ import { stripeWebhook } from "./controllers/stripeWebhook.js";
 
 const app = express();
 
+/* ---------------- CORS ---------------- */
 const corsOptions = {
   origin: process.env.TRUSTED_ORIGINS?.split(",") || ["http://localhost:5173"],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
+
+/* ------------- Stripe Webhook (RAW) ------------- */
 app.post(
   "/api/stripe",
   express.raw({ type: "application/json" }),
   stripeWebhook
 );
 
-const port = 3000;
-
-app.all("/api/auth/{*any}", toNodeHandler(auth));
+/* ------------- JSON for rest ------------- */
 app.use(express.json({ limit: "50mb" }));
+
+/* ------------- Auth ------------- */
+app.all("/api/auth/{*any}", toNodeHandler(auth));
+
+/* ------------- Routes ------------- */
 app.use("/api/user", userRouter);
 app.use("/api/project", projectRouter);
 
-app.get("/", (req: Request, res: Response) => {
+/* ------------- Health Check ------------- */
+app.get("/", (_req: Request, res: Response) => {
   res.send("Server is Live!");
 });
 
+/* ------------- Port (Render-safe) ------------- */
+const port = Number(process.env.PORT) || 3000;
+
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
