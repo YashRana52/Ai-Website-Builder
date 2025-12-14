@@ -1,8 +1,14 @@
-import prisma from "../lib/prisma.js";
-import openai from "../configs/openai.js";
-import Stripe from "stripe";
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.purchaseCredits = exports.togglePublish = exports.getUserProjects = exports.getUserProject = exports.createUserProject = exports.getUserCredits = void 0;
+const prisma_js_1 = __importDefault(require("../lib/prisma.js"));
+const openai_js_1 = __importDefault(require("../configs/openai.js"));
+const stripe_1 = __importDefault(require("stripe"));
 //Get user credits
-export const getUserCredits = async (req, res) => {
+const getUserCredits = async (req, res) => {
     try {
         const userId = req.userId;
         if (!userId) {
@@ -10,7 +16,7 @@ export const getUserCredits = async (req, res) => {
                 message: "Unauthorized",
             });
         }
-        const user = await prisma.user.findUnique({
+        const user = await prisma_js_1.default.user.findUnique({
             where: { id: userId },
             select: { credits: true }, // 🔥 optimized
         });
@@ -30,8 +36,9 @@ export const getUserCredits = async (req, res) => {
         });
     }
 };
+exports.getUserCredits = getUserCredits;
 // controller Function to create new project
-export const createUserProject = async (req, res) => {
+const createUserProject = async (req, res) => {
     const userId = req.userId;
     try {
         const { initial_prompt } = req.body;
@@ -40,7 +47,7 @@ export const createUserProject = async (req, res) => {
                 message: "Unauthorized",
             });
         }
-        const user = await prisma.user.findUnique({
+        const user = await prisma_js_1.default.user.findUnique({
             where: { id: userId },
         });
         if (user && user.credits < 5) {
@@ -49,7 +56,7 @@ export const createUserProject = async (req, res) => {
             });
         }
         // Create a new project
-        const project = await prisma.websiteProject.create({
+        const project = await prisma_js_1.default.websiteProject.create({
             data: {
                 name: initial_prompt.length > 50
                     ? initial_prompt.substring(0, 47) + "..."
@@ -59,18 +66,18 @@ export const createUserProject = async (req, res) => {
             },
         });
         // updates user total creation
-        await prisma.user.update({
+        await prisma_js_1.default.user.update({
             where: { id: userId },
             data: { totalCreation: { increment: 1 } },
         });
-        await prisma.conversation.create({
+        await prisma_js_1.default.conversation.create({
             data: {
                 role: "user",
                 content: initial_prompt,
                 projectId: project.id,
             },
         });
-        await prisma.user.update({
+        await prisma_js_1.default.user.update({
             where: { id: userId },
             data: { credits: { decrement: 5 } },
         });
@@ -78,7 +85,7 @@ export const createUserProject = async (req, res) => {
             projectId: project.id,
         });
         //  user prompt ko enhance krte h phle
-        const promptEnhanceResponse = await openai.chat.completions.create({
+        const promptEnhanceResponse = await openai_js_1.default.chat.completions.create({
             model: "z-ai/glm-4.5-air:free",
             messages: [
                 {
@@ -104,14 +111,14 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
             ],
         });
         const enhancedPrompt = promptEnhanceResponse.choices[0].message.content;
-        await prisma.conversation.create({
+        await prisma_js_1.default.conversation.create({
             data: {
                 role: "assistant",
                 content: `I've enhanced your prompt to "${enhancedPrompt}" `,
                 projectId: project.id,
             },
         });
-        await prisma.conversation.create({
+        await prisma_js_1.default.conversation.create({
             data: {
                 role: "assistant",
                 content: "now generating your website...",
@@ -119,7 +126,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
             },
         });
         //Generate website code
-        const codeGenerationResponse = await openai.chat.completions.create({
+        const codeGenerationResponse = await openai_js_1.default.chat.completions.create({
             model: "z-ai/glm-4.5-air:free",
             messages: [
                 {
@@ -157,14 +164,14 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
         });
         const code = codeGenerationResponse.choices[0].message.content || "";
         if (!code) {
-            await prisma.conversation.create({
+            await prisma_js_1.default.conversation.create({
                 data: {
                     role: "assistant",
                     content: "Unable to generate the code,please try again",
                     projectId: project.id,
                 },
             });
-            await prisma.user.update({
+            await prisma_js_1.default.user.update({
                 where: { id: userId },
                 data: {
                     credits: { increment: 5 },
@@ -173,7 +180,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
             return;
         }
         // Create Version for the project
-        const version = await prisma.version.create({
+        const version = await prisma_js_1.default.version.create({
             data: {
                 code: code
                     .replace(/```[a-z]*\n?/gi, "")
@@ -183,14 +190,14 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
                 projectId: project.id,
             },
         });
-        await prisma.conversation.create({
+        await prisma_js_1.default.conversation.create({
             data: {
                 role: "assistant",
                 content: "I've created your website You can now preview it and request any changes.",
                 projectId: project.id,
             },
         });
-        await prisma.websiteProject.update({
+        await prisma_js_1.default.websiteProject.update({
             where: { id: project.id },
             data: {
                 current_code: code
@@ -202,7 +209,7 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
         });
     }
     catch (error) {
-        await prisma.user.update({
+        await prisma_js_1.default.user.update({
             where: { id: userId },
             data: { credits: { increment: 5 } },
         });
@@ -212,8 +219,9 @@ Return ONLY the enhanced prompt, nothing else. Make it detailed but concise (2-3
         });
     }
 };
+exports.createUserProject = createUserProject;
 // controller function to get single user project
-export const getUserProject = async (req, res) => {
+const getUserProject = async (req, res) => {
     try {
         const userId = req.userId;
         if (!userId) {
@@ -222,7 +230,7 @@ export const getUserProject = async (req, res) => {
             });
         }
         const { projectId } = req.params;
-        const project = await prisma.websiteProject.findFirst({
+        const project = await prisma_js_1.default.websiteProject.findFirst({
             where: {
                 id: projectId,
                 userId,
@@ -254,14 +262,15 @@ export const getUserProject = async (req, res) => {
         });
     }
 };
+exports.getUserProject = getUserProject;
 //controller function to user to get all users Projects
-export const getUserProjects = async (req, res) => {
+const getUserProjects = async (req, res) => {
     try {
         const userId = req.userId;
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const projects = await prisma.websiteProject.findMany({
+        const projects = await prisma_js_1.default.websiteProject.findMany({
             where: { userId },
             orderBy: { updatedAt: "desc" },
             select: {
@@ -290,15 +299,16 @@ export const getUserProjects = async (req, res) => {
         });
     }
 };
+exports.getUserProjects = getUserProjects;
 //controller function to toggle project Publish
-export const togglePublish = async (req, res) => {
+const togglePublish = async (req, res) => {
     try {
         const userId = req.userId;
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
         const { projectId } = req.params;
-        const project = await prisma.websiteProject.findFirst({
+        const project = await prisma_js_1.default.websiteProject.findFirst({
             where: {
                 id: projectId,
                 userId,
@@ -307,7 +317,7 @@ export const togglePublish = async (req, res) => {
         if (!project) {
             return res.status(404).json({ message: "Project not found" });
         }
-        const updatedProject = await prisma.websiteProject.update({
+        const updatedProject = await prisma_js_1.default.websiteProject.update({
             where: {
                 id: projectId,
             },
@@ -327,8 +337,9 @@ export const togglePublish = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+exports.togglePublish = togglePublish;
 // controller function to puchase credits
-export const purchaseCredits = async (req, res) => {
+const purchaseCredits = async (req, res) => {
     try {
         const plans = {
             basic: {
@@ -353,7 +364,7 @@ export const purchaseCredits = async (req, res) => {
                 message: "plan not found",
             });
         }
-        const transaction = await prisma.transaction.create({
+        const transaction = await prisma_js_1.default.transaction.create({
             data: {
                 userId: userId,
                 planId: req.body.planId,
@@ -361,7 +372,7 @@ export const purchaseCredits = async (req, res) => {
                 credits: plan.credits,
             },
         });
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY);
         const session = await stripe.checkout.sessions.create({
             success_url: `${origin}/loading`,
             cancel_url: `${origin}`,
@@ -393,3 +404,4 @@ export const purchaseCredits = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+exports.purchaseCredits = purchaseCredits;

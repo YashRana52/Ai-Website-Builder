@@ -1,9 +1,12 @@
-import { auth } from "../lib/auth.js";
-import { fromNodeHeaders } from "better-auth/node";
-export const protect = async (req, res, next) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.protect = void 0;
+const auth_js_1 = require("../lib/auth.js");
+const node_1 = require("better-auth/node");
+const protect = async (req, res, next) => {
     try {
-        const session = await auth.api.getSession({
-            headers: fromNodeHeaders(req.headers),
+        const session = await auth_js_1.auth.api.getSession({
+            headers: (0, node_1.fromNodeHeaders)(req.headers),
         });
         if (!session || !session.user) {
             return res.status(401).json({
@@ -20,3 +23,4 @@ export const protect = async (req, res, next) => {
         });
     }
 };
+exports.protect = protect;
