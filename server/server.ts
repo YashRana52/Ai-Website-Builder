@@ -15,15 +15,16 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Stripe webhook MUST be before express.json
 app.post(
   "/api/stripe",
   express.raw({ type: "application/json" }),
   stripeWebhook
 );
 
-const port = 3000;
-
 app.all("/api/auth/{*any}", toNodeHandler(auth));
+
 app.use(express.json({ limit: "50mb" }));
 app.use("/api/user", userRouter);
 app.use("/api/project", projectRouter);
@@ -32,6 +33,5 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Server is Live!");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
+// ✅ IMPORTANT: export app for Vercel
+export default app;
