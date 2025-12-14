@@ -1,0 +1,33 @@
+import express from "express";
+import "dotenv/config";
+import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./lib/auth.js";
+import userRouter from "./routes/user.js";
+import projectRouter from "./routes/project.js";
+import { stripeWebhook } from "./controllers/stripeWebhook.js";
+const app = express();
+/* ---------------- CORS ---------------- */
+const corsOptions = {
+    origin: process.env.TRUSTED_ORIGINS?.split(",") || ["http://localhost:5173"],
+    credentials: true,
+};
+app.use(cors(corsOptions));
+/* ------------- Stripe Webhook (RAW) ------------- */
+app.post("/api/stripe", express.raw({ type: "application/json" }), stripeWebhook);
+/* ------------- JSON for rest ------------- */
+app.use(express.json({ limit: "50mb" }));
+/* ------------- Auth ------------- */
+app.all("/api/auth/{*any}", toNodeHandler(auth));
+/* ------------- Routes ------------- */
+app.use("/api/user", userRouter);
+app.use("/api/project", projectRouter);
+/* ------------- Health Check ------------- */
+app.get("/", (_req, res) => {
+    res.send("Server is Live!");
+});
+/* ------------- Port (Render-safe) ------------- */
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
