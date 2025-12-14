@@ -12,7 +12,7 @@ const Community = () => {
 
   const [projects, setProjects] = useState<Project[]>([]);
 
-  const naviagte = useNavigate();
+  const navigate = useNavigate();
 
   const fetchprojects = async () => {
     try {
@@ -89,7 +89,7 @@ const Community = () => {
 
                       <div className="flex gap-3 text-white text-sm">
                         <button
-                          onClick={() => naviagte(`/preview/${project.id}`)}
+                          onClick={() => navigate(`/preview/${project.id}`)}
                           className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md  transition-colors flex items-center gap-2"
                         >
                           <span className="bg-gray-200 size-4.5 rounded-full text-black font-semibold flex items-center justify-center">

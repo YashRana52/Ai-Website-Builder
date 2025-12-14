@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Project } from "../types";
 import { Loader2Icon, PlusIcon, TrashIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ const MyProjects = () => {
 
   const [projects, setProjects] = useState<Project[]>([]);
 
-  const naviagte = useNavigate();
+  const navigate = useNavigate();
 
   const fetchprojects = async () => {
     try {
@@ -38,7 +38,7 @@ const MyProjects = () => {
       const { data } = await api.delete(`/api/projects/${projectId}`);
       toast.success(data.message);
       fetchprojects();
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.response?.data?.message || error.message);
     }
   };
@@ -47,7 +47,7 @@ const MyProjects = () => {
     if (session?.user && !isPending) {
       fetchprojects();
     } else if (!isPending && !session?.user) {
-      naviagte("/");
+      navigate("/");
       toast("Please login to view your project");
     }
   }, [session?.user]);
@@ -64,7 +64,7 @@ const MyProjects = () => {
             <div className="flex items-center justify-between mb-12">
               <h1 className="text-2xl font-medium text-white">My Projects</h1>
               <button
-                onClick={() => naviagte("/")}
+                onClick={() => navigate("/")}
                 className="flex items-center gap-2 text-white px-3 sm:px-6  py-1 rounded bg-linear-to-br from-indigo-600 hover:opacity-90 active:scale-95 transition-all"
               >
                 <PlusIcon className="size-5" /> Create New
@@ -74,7 +74,7 @@ const MyProjects = () => {
             <div className="flex flex-wrap gap-3.5">
               {projects.map((project) => (
                 <div
-                  onClick={() => naviagte(`/projects/${project.id}`)}
+                  onClick={() => navigate(`/projects/${project.id}`)}
                   key={project.id}
                   className="relative group w-72 max-sm:mx-auto cursor-pointer bg-gray-900/60 border border-gray-700 rounded-lg overflow-hidden shadow-md group hover:shadow-indigo-700/30 hover:border-indigo-800/80 transition-all duration-300"
                 >
@@ -119,13 +119,13 @@ const MyProjects = () => {
 
                       <div className="flex gap-3 text-white text-sm">
                         <button
-                          onClick={() => naviagte(`/preview/${project.id}`)}
+                          onClick={() => navigate(`/preview/${project.id}`)}
                           className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md transition-all"
                         >
                           Preview
                         </button>
                         <button
-                          onClick={() => naviagte(`/projects/${project.id}`)}
+                          onClick={() => navigate(`/projects/${project.id}`)}
                           className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-md transition-all"
                         >
                           Open
