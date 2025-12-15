@@ -16,7 +16,7 @@ A modern **full‑stack AI SaaS platform** that allows users to generate complet
 
 | Home Page                         | Community Project                   |  Website Generation                      |
 |----------------------------------|----------------------------------|-----------------------------------|
-| ![Home](./screenshots/home.png) | ![Community](./screenshots/project.png) | ![Website](./screenshots/website.png) |
+| ![Home](https://github.com/YashRana52/Ai-Website-Builder/blob/main/Screenshot%202025-12-15%20121955.png?raw=true) | ![Community](https://github.com/YashRana52/Ai-Website-Builder/blob/main/Screenshot%202025-12-15%20122106.png?raw=true) | ![Website](https://github.com/YashRana52/Ai-Website-Builder/blob/main/Screenshot%202025-12-15%20122141.png?raw=true) |
 
 ---
 
